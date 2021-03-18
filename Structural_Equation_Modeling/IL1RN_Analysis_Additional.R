@@ -1,9 +1,11 @@
 ##############################################################################
-## Title: IL1Rn Additional Models
-## Version: 1
+## Title: Additional IL1RN/IL6 Models (MESA Exam 1 and Exam 5)
+## Version: 2
 ## Author: Regina Manansala
-## Date Created: 21-April-2020
-## Date Modified: 22-April-2020
+## Date Created: 22-April-2020
+## Date Modified: 08-May-2020
+## Results File: il6_addtl_22Apr2020.docx; il6_addtl_23Apr2020.docx
+##				 il6_addtl.docx
 ##############################################################################
 
 library(tidyr)
@@ -32,7 +34,7 @@ IL6_CHS_encore <- fread("~/Documents/Inflammation_Data_Results/IL6/il6_CHS_20190
 
 exam1_MESA <- exam1 %>% inner_join(., IL6_MESA_encore, by = c("IID" = "sample.id")) %>% 
   inner_join(., crp_encore[crp_encore$study.x == "MESA", c("sample.id", "crp")], by = c("IID" = "sample.id")) %>%
-  mutate(., IL.1Ra = log(IL.1Ra), IL.1.R.AcP = log(IL.1.R.AcP), IL.6 = log(IL.6), IL.1.sRI = log(IL.1.sRI), IL.1b = log(IL.1b))
+  mutate(., IL.1Ra = log(IL.1Ra), IL.1.R.AcP = log(IL.1.R.AcP), IL.6 = log(IL.6), IL.1.sRI = log(IL.1.sRI), IL.1b = log(IL.1b), IL.1a = log(IL.1a))
 
 # Delete observations with log(IL6) > 8
 exam1_MESA$IL.6 <- ifelse(exam1_MESA$IL.6 > 7, NA, exam1_MESA$IL.6)
@@ -40,23 +42,51 @@ exam1_MESA$IL.6 <- ifelse(exam1_MESA$IL.6 > 7, NA, exam1_MESA$IL.6)
 exam1_MESA$IL.1b <- ifelse(exam1_MESA$IL.1b > 10, NA, exam1_MESA$IL.1b)
 # delete log(IL1Ra) > 10
 exam1_MESA$IL.1Ra <- ifelse(exam1_MESA$IL.1Ra > 10, NA, exam1_MESA$IL.1Ra)
+# Delete observations with log(IL6) > 8
+exam1_MESA$IL.1a <- ifelse(exam1_MESA$IL.1a > 8, NA, exam1_MESA$IL.1a)
 
-vars <- c("IL.1.R.AcP", "IL.6", "IL.1.sRI", "IL.1b", "IL.1Ra")
-summary(exam1_MESA[, vars])
-for(i in vars){
-  hist(exam1_MESA[[i]], main = paste0("Histogram of ", i), xlab = paste0("exam1_MESA$", i))
-  boxplot(exam1_MESA[[i]], main = paste0("Boxplot of ", i), xlab = paste0("exam1_MESA$", i))
-}
+# normalize the values (subtract the mean and divide by the standard deviation).
+exam1_MESA$IL.1.R.AcP_norm <- (exam1_MESA$IL.1.R.AcP - mean(exam1_MESA$IL.1.R.AcP, na.rm = TRUE)) / sd(exam1_MESA$IL.1.R.AcP, na.rm = TRUE)
+exam1_MESA$IL.6_norm <- (exam1_MESA$IL.6 - mean(exam1_MESA$IL.6, na.rm = TRUE)) / sd(exam1_MESA$IL.6, na.rm = TRUE)
+exam1_MESA$IL.1.sRI_norm <- (exam1_MESA$IL.1.sRI - mean(exam1_MESA$IL.1.sRI, na.rm = TRUE)) / sd(exam1_MESA$IL.1.sRI, na.rm = TRUE)
+exam1_MESA$IL.1b_norm <- (exam1_MESA$IL.1b - mean(exam1_MESA$IL.1b, na.rm = TRUE)) / sd(exam1_MESA$IL.1b, na.rm = TRUE)
+exam1_MESA$IL.1Ra_norm <- (exam1_MESA$IL.1Ra - mean(exam1_MESA$IL.1Ra, na.rm = TRUE)) / sd(exam1_MESA$IL.1Ra, na.rm = TRUE)
+exam1_MESA$IL.1a_norm <- (exam1_MESA$IL.1a - mean(exam1_MESA$IL.1a, na.rm = TRUE)) / sd(exam1_MESA$IL.1a, na.rm = TRUE)
 
-summary(lm(chr2.113083453_G ~ IL.1.R.AcP, data=exam1_MESA))
-summary(lm(chr2.113083453_G ~ IL.6, data=exam1_MESA))
-summary(lm(chr2.113083453_G ~ IL.1.sRI, data=exam1_MESA))
-summary(lm(chr2.113083453_G ~ IL.1b, data=exam1_MESA))
-summary(lm(chr2.113083453_G ~ IL.1Ra, data=exam1_MESA))
+# vars <- c("IL.1.R.AcP", "IL.6", "IL.1.sRI", "IL.1b", "IL.1Ra", "IL.1a")
+# summary(exam1_MESA[, vars])
+# vars_norm <- c("IL.1.R.AcP_norm", "IL.6_norm", "IL.1.sRI_norm", "IL.1b_norm", "IL.1Ra_norm", "IL.1a_norm")
+# summary(exam1_MESA[, vars_norm])
+# for(i in vars_norm){
+#   hist(exam1_MESA[[i]], main = paste0("Histogram of ", i), xlab = paste0("exam1_MESA$", i))
+#   boxplot(exam1_MESA[[i]], main = paste0("Boxplot of ", i), xlab = paste0("exam1_MESA$", i))
+# }
+# 
+# summary(lm(IL.6_norm ~ chr2.113083453_G, data=exam1_MESA))
+# summary(lm(IL.1Ra_norm ~ chr2.113083453_G, data=exam1_MESA))
+# summary(lm(IL.1b_norm ~ chr2.113083453_G, data=exam1_MESA))
+# summary(lm(IL.1.sRI_norm ~ chr2.113083453_G, data=exam1_MESA))
+# summary(lm(IL.1.R.AcP_norm ~ chr2.113083453_G, data=exam1_MESA))
+# summary(lm(IL.1Ra_norm ~ IL.1b_norm, data=exam1_MESA))
+# summary(lm(IL.1Ra_norm ~ IL.1.sRI_norm, data=exam1_MESA))
+# summary(lm(IL.1Ra_norm ~ IL.1.R.AcP_norm, data=exam1_MESA))
+# summary(lm(IL.6_norm ~ IL.1b_norm, data=exam1_MESA))
+# summary(lm(IL.6_norm ~ IL.1.sRI_norm, data=exam1_MESA))
+# summary(lm(IL.6_norm ~ IL.1.R.AcP_norm, data=exam1_MESA))
+# summary(lm(IL.6_norm ~ IL.1Ra_norm, data=exam1_MESA))
+
+summary(lm(IL.1a_norm ~ chr2.113083453_G, data=exam1_MESA))
+summary(lm(IL.6_norm ~ IL.1a_norm, data=exam1_MESA))
+
+# summary(lm(chr2.113083453_G ~ IL.1.R.AcP, data=exam1_MESA))
+# summary(lm(chr2.113083453_G ~ IL.6, data=exam1_MESA))
+# summary(lm(chr2.113083453_G ~ IL.1.sRI, data=exam1_MESA))
+# summary(lm(chr2.113083453_G ~ IL.1b, data=exam1_MESA))
+# summary(lm(chr2.113083453_G ~ IL.1Ra, data=exam1_MESA))
 
 exam5_MESA <- exam5 %>% inner_join(., IL6_MESA_encore, by = c("IID" = "sample.id")) %>% 
   inner_join(., crp_encore[crp_encore$study.x == "MESA", c("sample.id", "crp")], by = c("IID" = "sample.id")) %>%
-  mutate(., IL.1Ra = log(IL.1Ra), IL.1.R.AcP = log(IL.1.R.AcP), IL.6 = log(IL.6), IL.1.sRI = log(IL.1.sRI), IL.1b = log(IL.1b))
+  mutate(., IL.1Ra = log(IL.1Ra), IL.1.R.AcP = log(IL.1.R.AcP), IL.6 = log(IL.6), IL.1.sRI = log(IL.1.sRI), IL.1b = log(IL.1b), IL.1a = log(IL.1a))
 
 # Delete observations with log(IL6) > 8
 exam5_MESA$IL.6 <- ifelse(exam5_MESA$IL.6 > 7, NA, exam5_MESA$IL.6)
@@ -64,48 +94,64 @@ exam5_MESA$IL.6 <- ifelse(exam5_MESA$IL.6 > 7, NA, exam5_MESA$IL.6)
 exam5_MESA$IL.1b <- ifelse(exam5_MESA$IL.1b > 10, NA, exam5_MESA$IL.1b)
 # delete log(IL1Ra) > 10
 exam5_MESA$IL.1Ra <- ifelse(exam5_MESA$IL.1Ra > 10, NA, exam5_MESA$IL.1Ra)
+# Delete observations with log(IL6) > 8
+exam5_MESA$IL.1a <- ifelse(exam5_MESA$IL.1a > 8, NA, exam5_MESA$IL.1a)
 
-summary(exam5_MESA[, vars])
-for(i in vars){
-  hist(exam5_MESA[[i]], main = paste0("Histogram of ", i), xlab = paste0("exam5_MESA$", i))
-  boxplot(exam5_MESA[[i]], main = paste0("Boxplot of ", i), xlab = paste0("exam5_MESA$", i))
-}
+# normalize the values (subtract the mean and divide by the standard deviation).
+exam5_MESA$IL.1.R.AcP_norm <- (exam5_MESA$IL.1.R.AcP - mean(exam5_MESA$IL.1.R.AcP, na.rm = TRUE)) / sd(exam5_MESA$IL.1.R.AcP, na.rm = TRUE)
+exam5_MESA$IL.6_norm <- (exam5_MESA$IL.6 - mean(exam5_MESA$IL.6, na.rm = TRUE)) / sd(exam5_MESA$IL.6, na.rm = TRUE)
+exam5_MESA$IL.1.sRI_norm <- (exam5_MESA$IL.1.sRI - mean(exam5_MESA$IL.1.sRI, na.rm = TRUE)) / sd(exam5_MESA$IL.1.sRI, na.rm = TRUE)
+exam5_MESA$IL.1b_norm <- (exam5_MESA$IL.1b - mean(exam5_MESA$IL.1b, na.rm = TRUE)) / sd(exam5_MESA$IL.1b, na.rm = TRUE)
+exam5_MESA$IL.1Ra_norm <- (exam5_MESA$IL.1Ra - mean(exam5_MESA$IL.1Ra, na.rm = TRUE)) / sd(exam5_MESA$IL.1Ra, na.rm = TRUE)
+exam5_MESA$IL.1a_norm <- (exam5_MESA$IL.1a - mean(exam5_MESA$IL.1a, na.rm = TRUE)) / sd(exam5_MESA$IL.1a, na.rm = TRUE)
 
-summary(lm(chr2.113083453_G ~ IL.1.R.AcP, data=exam5_MESA))
-summary(lm(chr2.113083453_G ~ IL.6, data=exam5_MESA))
-summary(lm(chr2.113083453_G ~ IL.1.sRI, data=exam5_MESA))
-summary(lm(chr2.113083453_G ~ IL.1b, data=exam5_MESA))
-summary(lm(chr2.113083453_G ~ IL.1Ra, data=exam5_MESA))
+# summary(exam5_MESA[, vars])
+# summary(exam5_MESA[, vars_norm])
+# for(i in vars_norm){
+#   hist(exam5_MESA[[i]], main = paste0("Histogram of ", i), xlab = paste0("exam5_MESA$", i))
+#   boxplot(exam5_MESA[[i]], main = paste0("Boxplot of ", i), xlab = paste0("exam5_MESA$", i))
+# }
+# 
+# summary(lm(IL.6_norm ~ chr2.113083453_G, data=exam5_MESA))
+# summary(lm(IL.1Ra_norm ~ chr2.113083453_G, data=exam5_MESA))
+# summary(lm(IL.1b_norm ~ chr2.113083453_G, data=exam5_MESA))
+# summary(lm(IL.1.sRI_norm ~ chr2.113083453_G, data=exam5_MESA))
+# summary(lm(IL.1.R.AcP_norm ~ chr2.113083453_G, data=exam5_MESA))
+# summary(lm(IL.1Ra_norm ~ IL.1b_norm, data=exam5_MESA))
+# summary(lm(IL.1Ra_norm ~ IL.1.sRI_norm, data=exam5_MESA))
+# summary(lm(IL.1Ra_norm ~ IL.1.R.AcP_norm, data=exam5_MESA))
+# summary(lm(IL.6_norm ~ IL.1b_norm, data=exam5_MESA))
+# summary(lm(IL.6_norm ~ IL.1.sRI_norm, data=exam5_MESA))
+# summary(lm(IL.6_norm ~ IL.1.R.AcP_norm, data=exam5_MESA))
+# summary(lm(IL.6_norm ~ IL.1Ra_norm, data=exam5_MESA))
 
-CHS_lv <- CHS_addtl %>% mutate(., unique_subject_key = paste0("CHS_", Individual_ID)) %>% 
-  inner_join(., samples[, c("unique_subject_key", "sample.id")], by = "unique_subject_key") %>%
-  inner_join(., rs6734238[, c("IID", "chr2:113083453_G")], by = c("sample.id" = "IID")) %>%
-  inner_join(., IL6_CHS_encore, by = "sample.id") %>%
-  inner_join(., crp_encore[crp_encore$study.x == "CHS", c("sample.id", "crp")], by = "sample.id") %>%
-  mutate(., il1ray2 = log(il1ray2), il1ray5 = log(il1ray5)) %>%
-  rename(., IID = sample.id, chr2.113083453_G = `chr2:113083453_G`, IL.1Ra = il1ray2)
-CHS_lv2 <- subset(CHS_lv, CHS_lv$il6harmonizedy2 != 0 & CHS_lv$il6harmonizedy2 < mean(CHS_lv$il6harmonizedy2, na.rm = TRUE) + 3*sd(CHS_lv$il6harmonizedy2, na.rm = TRUE)) %>%
-  mutate(., il6harmonizedy2 = log(il6harmonizedy2))
+summary(lm(IL.1a_norm ~ chr2.113083453_G, data=exam5_MESA))
+summary(lm(IL.6_norm ~ IL.1a_norm, data=exam5_MESA))
+# 
+# summary(lm(chr2.113083453_G ~ IL.1.R.AcP, data=exam5_MESA))
+# summary(lm(chr2.113083453_G ~ IL.6, data=exam5_MESA))
+# summary(lm(chr2.113083453_G ~ IL.1.sRI, data=exam5_MESA))
+# summary(lm(chr2.113083453_G ~ IL.1b, data=exam5_MESA))
+# summary(lm(chr2.113083453_G ~ IL.1Ra, data=exam5_MESA))
+# 
+# CHS_lv <- CHS_addtl %>% mutate(., unique_subject_key = paste0("CHS_", Individual_ID)) %>% 
+#   inner_join(., samples[, c("unique_subject_key", "sample.id")], by = "unique_subject_key") %>%
+#   inner_join(., rs6734238[, c("IID", "chr2:113083453_G")], by = c("sample.id" = "IID")) %>%
+#   inner_join(., IL6_CHS_encore, by = "sample.id") %>%
+#   inner_join(., crp_encore[crp_encore$study.x == "CHS", c("sample.id", "crp")], by = "sample.id") %>%
+#   mutate(., il1ray2 = log(il1ray2), il1ray5 = log(il1ray5)) %>%
+#   rename(., IID = sample.id, chr2.113083453_G = `chr2:113083453_G`, IL.1Ra = il1ray2)
+# CHS_lv2 <- subset(CHS_lv, CHS_lv$il6harmonizedy2 != 0 & CHS_lv$il6harmonizedy2 < mean(CHS_lv$il6harmonizedy2, na.rm = TRUE) + 3*sd(CHS_lv$il6harmonizedy2, na.rm = TRUE)) %>%
+#   mutate(., il6harmonizedy2 = log(il6harmonizedy2))
 
 ## Original IL6 Variable
-summary(lm(chr2.113083453_G ~ il6, data=CHS_lv))
+# summary(lm(chr2.113083453_G ~ il6, data=CHS_lv))
 
 ## IL6Harmonized2 - after removing outliers and missings
-summary(lm(chr2.113083453_G ~ il6harmonizedy2, data=CHS_lv2))
-
-# exam1_analysis <- exam1_MESA[, c("IID", "age", "sex", "race", "bmi1c", "chr2.113083453_G", "IL.1Ra", "il6", "crp", "PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")]
-# exam1_analysis$study <- "MESA_1"
-# exam5_analysis <- exam5_MESA[, c("IID", "age", "sex", "race", "bmi5c", "chr2.113083453_G", "IL.1Ra", "il6", "crp", "PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")]
-# exam5_analysis$study <- "MESA_5"
-# chs_analysis <- CHS_lv[, c("IID", "age", "sex", "race", "chr2.113083453_G", "IL.1Ra", "il6", "crp", "PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")]
-# chs_analysis$study <- "CHS"
-# 
-# all_studies <- rbind(exam1_analysis[, -5], exam5_analysis[, -5], chs_analysis)
-# 
-# chs_analysis_2 <- CHS_lv2[, c("IID", "age", "sex", "race", "chr2.113083453_G", "IL.1Ra", "il6harmonizedy2", "crp", "PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10")]
-# chs_analysis_2$study <- "CHS"
+# summary(lm(chr2.113083453_G ~ il6harmonizedy2, data=CHS_lv2))
 
 
-
+# write.table(exam1_MESA, "exam1_MESA_norm.txt", sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+# write.table(exam5_MESA, "exam5_MESA_norm.txt", sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 

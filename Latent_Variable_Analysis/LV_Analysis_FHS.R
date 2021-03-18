@@ -1,3 +1,11 @@
+##############################################################################
+## Title: CFS Composite Phenotype File Creation for Encore GWAS Analysis
+## Version: 1
+## Author: Regina Manansala
+## Date Created: 02-March-2020
+## Date Modified: 30-March-2020
+##############################################################################
+
 library(lavaan)
 library(data.table)
 library(dplyr)
@@ -99,6 +107,7 @@ for(j in 1:length(varlist)){
 }
 varlist <- varlist[!is.na(varlist)]
 
+## Transform inflammation phenotypes
 trans.df <- FHS
 for(k in 1:length(varlist)){
   if(is.numeric(trans.df[[varlist[k]]]) == FALSE){
@@ -114,6 +123,7 @@ assign(paste("FHS", "trans", sep = "_"), trans.df)
 
 summary(FHS_trans[, c("IL6", "CRP", "IL18", "ICAM", "TNFA", "PSELECTIN", "MMP9", "OPG", "MCP1", "LPPLA2_ACT", "LPPLA2_MASS")])
 
+## Calculate composite phenotype
 # mod <- "comp.pheno =~ CRP + IL6 + IL18 + ICAM + TNFA + PSELECTIN + MMP9 + OPG + MCP1 + LPPLA2_ACT + LPPLA2_MASS"
 # fit <- cfa(mod, data=FHS_trans,missing = "ml")
 # summary(fit, standardized = T, fit.measures = T)
@@ -168,7 +178,8 @@ summary(fit, standardized = T, fit.measures = T)
 # pred <- data.frame(predict(fit), id = fit_id)
 # # https://groups.google.com/forum/#!msg/lavaan/UPrU8qG5nOs/70OyCU-1u4EJ
 # FHS_lv <- tibble::rownames_to_column(trans.df, "id") %>% mutate(id = as.numeric(id)) %>% left_join(., pred, by = "id") %>% dplyr::select(-1)
-# 
+
+## Format and export
 # FHS_encore_prelim <- left_join(FHS_lv[, c("sample.id", "comp.pheno", "SEX", "ANCESTRY")], pcs, by = c("sample.id"="V1"))
 # names(FHS_encore_prelim)[5:15] <- c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10", "PC11")
 # write.table(FHS_encore_prelim, "../Inflammation_SEM/FHS_encore_prelim.txt", sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)

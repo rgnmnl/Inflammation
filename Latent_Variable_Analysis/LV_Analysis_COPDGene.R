@@ -1,3 +1,11 @@
+##############################################################################
+## Title: COPDGene Composite Phenotype File Creation for Encore GWAS Analysis
+## Version: 1
+## Author: Regina Manansala
+## Date Created: 14-February-2020
+## Date Modified: 24-March-2020
+##############################################################################
+
 library(lavaan)
 library(data.table)
 library(dplyr)
@@ -86,9 +94,10 @@ for(i in 1:length(study)){
 }
 ## ADD SD AND RACE EXCLUSION CRITERIA
 
-#WHI 
 varlist <- grep("(^crp($|_1)|^il6($|_1)|^il8($|_1)|^il10($|_1)|^il18($|_1)|^icam($|_1)|^tnfa($|_1)|^pselectin($|_1)|^eselectin($|_1)|^l1_beta($|_1)|^tnfa_r1($|_1)|^mmp1($|_1)|^mmp9($|_1)|^cd40($|_1)|^isoprostane_8_epi_pgf2a($|_1)|^lppla2_act($|_1)|^lppla2_mass($|_1)|^mcp1($|_1)|^mpo($|_1)|^opg($|_1)|^tnfr2($|_1))", 
                 colnames(COPDGene), value = TRUE, ignore.case = TRUE)
+
+## Exclude PSELECTIN (NA in original inflammation data)
 for(j in 1:length(varlist)){
   # varcol <- get(study[i])[[varlist[j]]] %>% as.numeric()
   if(sum(is.na(WHI[, varlist[j]])) == nrow(WHI)){
@@ -97,6 +106,7 @@ for(j in 1:length(varlist)){
 }
 varlist <- varlist[!is.na(varlist)]
 
+## Transform inflammation phenotypes
 trans.df <- COPDGene
 for(k in 1:length(varlist)){
   if(is.numeric(trans.df[[varlist[k]]]) == FALSE){
@@ -107,6 +117,7 @@ for(k in 1:length(varlist)){
 }
 assign(paste("COPDGene", "trans", sep = "_"), trans.df)
 
+## Calculate composite phenotype
 # ***
 mod <- "comp.pheno =~ IL6 + CRP + IL8 + IL10 + ICAM + ESELECTIN + MMP9 + TNFA + TNFA_R1"
 fit <- cfa(mod, data=COPDGene_trans, missing = "ml")
@@ -139,6 +150,7 @@ pred <- data.frame(predict(fit), id = fit_id)
 # https://groups.google.com/forum/#!msg/lavaan/UPrU8qG5nOs/70OyCU-1u4EJ
 COPDGene_lv <- tibble::rownames_to_column(trans.df, "id") %>% mutate(id = as.numeric(id)) %>% left_join(., pred, by = "id") %>% dplyr::select(-1)
 
+## Format and export
 COPDGene_encore_prelim <- left_join(COPDGene_lv[, c("unique_subject_key", "comp.pheno", "SEX", "ANCESTRY")], samples[!duplicated(unique_subject_key), c("sample.id", "unique_subject_key")], by = "unique_subject_key")
 
 COPDGene_PCs <- left_join(COPDGene_encore_prelim, pcs, by = c("sample.id" = "V1"))

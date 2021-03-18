@@ -1,3 +1,11 @@
+##############################################################################
+## Title: CFS Composite Phenotype File Creation for Encore GWAS Analysis
+## Version: 1
+## Author: Regina Manansala
+## Date Created: 31-January-2020
+## Date Modified: 25-March-2020
+##############################################################################
+
 library(lavaan)
 library(data.table)
 library(dplyr)
@@ -97,6 +105,7 @@ for(j in 1:length(varlist)){
 }
 varlist <- varlist[!is.na(varlist)]
 
+## Transform inflammation phenotypes
 trans.df <- WHI
 for(k in 1:length(varlist)){
   if(is.numeric(trans.df[[varlist[k]]]) == FALSE){
@@ -107,6 +116,7 @@ for(k in 1:length(varlist)){
 }
 assign(paste("WHI", "trans", sep = "_"), trans.df)
 
+## Calculate composite phenotype
 # mod <- "comp.pheno =~ IL6 + CRP + IL8 + IL10 + ICAM + ESELECTIN + MMP9 + TNFA + TNFA_R1"
 # fit <- cfa(mod, data=WHI_trans, missing = "ml")
 # summary(fit, standardized = T, fit.measures = T)
@@ -140,11 +150,12 @@ pred <- data.frame(predict(fit), id = fit_id)
 # https://groups.google.com/forum/#!msg/lavaan/UPrU8qG5nOs/70OyCU-1u4EJ
 WHI_lv <- tibble::rownames_to_column(trans.df, "id") %>% mutate(id = as.numeric(id)) %>% left_join(., pred, by = "id") %>% dplyr::select(-1)
 
+## Format and export
 WHI_encore_prelim <- left_join(WHI_lv[, c("unique_subject_key", "comp.pheno", "SEX", "ANCESTRY")], samples[!duplicated(unique_subject_key), c("sample.id", "unique_subject_key")], by = "unique_subject_key")
 
 write.table(WHI_encore_prelim[!is.na(WHI_encore_prelim$comp.pheno),], "../Inflammation_SEM/WHI_encore_prelim.txt", sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
-
+## Combine WHI and MESA composite phenotypes and export
 MESA_lv <- fread("../Inflammation_SEM/Encore_Prelim/MESA_encore_prelim.txt")
 names(MESA_lv)[3:4] <- c("SEX", "ANCESTRY")
 MESA_WHI <- rbind(MESA_lv, WHI_encore_prelim[!is.na(WHI_encore_prelim$comp.pheno),])

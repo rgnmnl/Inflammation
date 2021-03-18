@@ -1,3 +1,11 @@
+##############################################################################
+## Title: CHS Composite Phenotype File Creation for Encore GWAS Analysis
+## Version: 1
+## Author: Regina Manansala
+## Date Created: 04-March-2020
+## Date Modified: 25-March-2020
+##############################################################################
+
 library(lavaan)
 library(data.table)
 library(dplyr)
@@ -89,6 +97,8 @@ for(i in 1:length(study)){
 #MESA 554 vars
 varlist <- grep("(^crp($|_1)|^il6($|_1)|^il8($|_1)|^il10($|_1)|^il18($|_1)|^icam($|_1)|^tnfa($|_1)|^pselectin($|_1)|^eselectin($|_1)|^l1_beta($|_1)|^tnfa_r1($|_1)|^mmp1($|_1)|^mmp9($|_1)|^cd40($|_1)|^isoprostane_8_epi_pgf2a($|_1)|^lppla2_act($|_1)|^lppla2_mass($|_1)|^mcp1($|_1)|^mpo($|_1)|^opg($|_1)|^tnfr2($|_1))", 
                 colnames(CHS), value = TRUE, ignore.case = TRUE)
+
+## Transform inflammation phenotypes
 for(j in 1:length(varlist)){
   # varcol <- get(study[i])[[varlist[j]]] %>% as.numeric()
   if(sum(is.na(CHS[, varlist[j]])) == nrow(CHS)){
@@ -110,6 +120,7 @@ assign(paste("CHS", "trans", sep = "_"), trans.df)
 
 summary(CHS_trans[, c("crp_1", "il6_1", "lppla2_act_1", "lppla2_mass_1")])
 
+## Calculate composite phenotype
 mod <- "comp.pheno =~ il6_1 + crp_1 + lppla2_act_1 + lppla2_mass_1"
 # RMSEA: 0.107
 # CFI: 0.734
@@ -127,6 +138,7 @@ pred <- data.frame(predict(fit), id = fit_id)
 # https://groups.google.com/forum/#!msg/lavaan/UPrU8qG5nOs/70OyCU-1u4EJ
 CHS_lv <- tibble::rownames_to_column(trans.df, "id") %>% mutate(id = as.numeric(id)) %>% left_join(., pred, by = "id") %>% dplyr::select(-1)
 
+## Format and export
 CHS_encore_prelim <- left_join(CHS_lv[, c("sample.id", "comp.pheno", "SEX", "ANCESTRY")], pcs, by = c("sample.id"="V1"))
 names(CHS_encore_prelim)[5:15] <- c("PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10", "PC11")
 write.table(CHS_encore_prelim, "../Inflammation_SEM/CHS_encore_prelim.txt", sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)

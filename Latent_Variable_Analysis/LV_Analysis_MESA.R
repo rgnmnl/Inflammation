@@ -1,3 +1,11 @@
+##############################################################################
+## Title: CFS Composite Phenotype File Creation for Encore GWAS Analysis
+## Version: 1
+## Author: Regina Manansala
+## Date Created: 28-January-2020
+## Date Modified: 25-March-2020
+##############################################################################
+
 library(lavaan)
 library(data.table)
 library(dplyr)
@@ -97,6 +105,7 @@ for(j in 1:length(varlist)){
 }
 varlist <- varlist[!is.na(varlist)]
 
+## Transform inflammation phenotypes
 trans.df <- MESA
 for(k in 1:length(varlist)){
   if(is.numeric(trans.df[[varlist[k]]]) == FALSE){
@@ -109,6 +118,7 @@ assign(paste("MESA", "trans", sep = "_"), trans.df)
 
 summary(MESA_trans[,varlist])
 
+## Calculate composite phenotype
 # MESA_cc <- MESA_trans[complete.cases(MESA_trans[,c("il6_1", "cd40_1", "crp_1", "eselectin_1", "il10_1", "lppla2_act_1", "mmp9_1", "tnfa_r1_1")]),]
 # # mod <- paste0("comp_pheno ~ ", str_c(varlist,collapse='+'))
 #
@@ -155,6 +165,7 @@ pred <- data.frame(predict(fit), id = fit_id)
 # https://groups.google.com/forum/#!msg/lavaan/UPrU8qG5nOs/70OyCU-1u4EJ
 MESA_lv <- tibble::rownames_to_column(trans.df, "id") %>% mutate(id = as.numeric(id)) %>% left_join(., pred, by = "id") %>% dplyr::select(-1)
 
+## Format and export
 MESA_encore_prelim <- left_join(MESA_lv[, c("unique_subject_key", "comp.pheno", "annotated_sex_1", "race_1")], samples[!duplicated(unique_subject_key), c("sample.id", "unique_subject_key")], by = "unique_subject_key")
 
 write.table(MESA_encore_prelim, "../Inflammation_SEM/MESA_encore_prelim.txt", sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
